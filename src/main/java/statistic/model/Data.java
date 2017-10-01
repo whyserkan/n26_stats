@@ -26,6 +26,6 @@ public class Data implements Comparable<Data>{
 	
 	@Override
 	public int compareTo(Data o) {
-		return (int)(this.time - o.time);
+		return (int)(this.time - o.getTime());
 	}
 }
