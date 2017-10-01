@@ -9,9 +9,9 @@ import statistic.dto.StatisticsResponseDTO;
 import statistic.dto.TransactionDTO;
 
 public class DataQueue {
-	private BlockingQueue<Data> data = new PriorityBlockingQueue<Data>();
+	private BlockingQueue<Data> data = new PriorityBlockingQueue<Data>(20);
 	
-	private final int EXPIRE_TIME_IN_MILLIS = 60 * 1000;
+	public final int EXPIRE_TIME_IN_MILLIS = 60 * 1000;
 	
 	private Stats stats = new Stats();
 	
@@ -24,60 +24,38 @@ public class DataQueue {
 		data.add(new Data(trDto));
 		log();
 		stats.addNew(trDto.getAmount());
-		removeExpired(now);
+		//removeExpired(now);
 		log();
 		return true;
 	}
 	
-	private void log(){
+	public void log(){
 		System.out.println("--------------------");
-		System.out.print(stats.getAvg());
-		System.out.print(stats.getSum());
-		System.out.print(stats.getCount());
-		System.out.print(stats.getMax());
-		System.out.print(stats.getMin());
-		System.out.println("");
+		System.out.println("avg: "+stats.getAvg());
+		System.out.println("sum: "+stats.getSum());
+		System.out.println("cnt: "+stats.getCount());
+		System.out.println("max: "+stats.getMax());
+		System.out.println("min: "+stats.getMin());
 		System.out.println("--------------------");
-	}
-	
-	private void removeExpired(long now){
-		boolean last60sec = false;
-		System.out.println(5);
-		
-		while(data.size()!=0 && !last60sec){
-			Data pulledData = data.peek();
-			System.out.println(6);
-			last60sec = now - pulledData.getTime() < EXPIRE_TIME_IN_MILLIS;
-			
-			if(!last60sec){
-				System.out.println(8);
-				pulledData = data.remove();
-				double removedAmount = pulledData.getAmount();
-				stats.removeExpired(removedAmount);
-			}
-		}
 	}
 	
 	public StatisticsResponseDTO getStats(){
 		return stats.getDTO();
 	}
 	
-	public String toString(){
-		StringBuffer sb = new StringBuffer();
-		if(data.size()!=0){
-			Data pulledData;
-			sb.append("All: ");
-			
-			while (data.size()!=0){
-				pulledData = data.remove();
-				sb.append(String.valueOf(pulledData.getAmount()));
-				sb.append(" - ");
-				sb.append(String.valueOf(pulledData.getTime()));
-				sb.append(" | ");
-			}
-		} else {
-			sb.append("No data");
-		}
-		return sb.toString();
+	public Data peek(){
+		return data.peek();	
+	}
+	
+	public int getQueueSize(){
+		return data.size();
+	}
+	
+	public Data remove(){
+		return data.remove();
+	}
+	
+	public void removeFromAmounts(double amount){
+		stats.removeExpired(amount);
 	}
 }

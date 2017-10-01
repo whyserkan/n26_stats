@@ -1,11 +1,18 @@
 package statistic.model;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
+
+import org.springframework.boot.context.annotation.DeterminableImports;
 
 import statistic.dto.StatisticsResponseDTO;
 
 import com.google.common.collect.MinMaxPriorityQueue;
 import com.google.common.util.concurrent.AtomicDouble;
+import com.google.common.util.concurrent.AtomicDoubleArray;
 
 public class Stats {
 	private AtomicDouble sum = new AtomicDouble();
@@ -13,6 +20,8 @@ public class Stats {
 	private AtomicLong count = new AtomicLong();
 	private AtomicDouble min = new AtomicDouble();
 	private AtomicDouble max = new AtomicDouble();
+	private List<Double> allAmountsArray = Collections.synchronizedList(new ArrayList<Double>());
+	private boolean minMaxCreated = false;
 	
 	
 	public AtomicDouble getSum() {
@@ -32,20 +41,25 @@ public class Stats {
 	}
 	
 	public StatisticsResponseDTO getDTO(){
-		return  new StatisticsResponseDTO(sum.get(),avg.get(),max.get(),min.get(),count.get());  
+		return new StatisticsResponseDTO(sum.get(),avg.get(),max.get(),min.get(),count.get());  
 	}
 	
 	public void addNew(double amount){
-		count.incrementAndGet();
 		sum.addAndGet(amount);
-		min.set(Math.min(min.get(), amount));
-		max.set(Math.max(max.get(), amount));
+		if(count.get()==0){
+			min.set(amount);
+			max.set(amount);
+		} else {
+			min.set(Math.min(min.get(), amount));
+			max.set(Math.max(max.get(), amount));
+		}
+		count.incrementAndGet();
 		avg.set(sum.get()/count.doubleValue());
-		minMax.add(amount);
+		allAmountsArray.add(amount);
 	}
 	
 	public void removeExpired(double amount){
-		if(count.get()==1){
+		if(count.get()==1) {
 			sum = new AtomicDouble();
 			avg = new AtomicDouble();
 			count = new AtomicLong();
@@ -54,16 +68,36 @@ public class Stats {
 		} else {
 			count.addAndGet(-1);
 			sum.addAndGet(amount * -1);
-			min.set(Math.min(min.get(), amount));
-			max.set(Math.max(max.get(), amount));
-			avg.set(sum.get()/count.doubleValue());			
+			avg.set(sum.get()/count.doubleValue());
+			findNewMinMaxIfNeeded(amount);
 		}
 	} 
-	private void setNewMinMaxIfNeeded(double deletedAmount){
-		//double maxFromQueue = minMax.peekLast();
-		if(deletedAmount==maxFromQueue){
-			minMax.removeLast();
-			max = minMax.peekLast();
+	
+	private void findNewMinMaxIfNeeded(double deletedAmount){
+		boolean isMin = min.get() == deletedAmount;
+		boolean isMax = max.get() == deletedAmount;
+		boolean needToSort = isMin || isMax;
+		boolean sameValues = isMin && isMax;
+		
+		if(needToSort){
+			Collections.sort(allAmountsArray);
+		}
+		
+		if(sameValues){
+			allAmountsArray.remove(allAmountsArray.size()-1);
+		}
+		
+		if(isMin && !sameValues){
+			min.set(allAmountsArray.get(1));
+			allAmountsArray.remove(0);
+		}
+		if(isMax && !sameValues){
+			max.set(allAmountsArray.get(allAmountsArray.size()-2));
+			allAmountsArray.remove(allAmountsArray.size()-1);
+		}
+		
+		if(!isMax && !isMax){
+			allAmountsArray.remove(deletedAmount);
 		}
 	}
 
