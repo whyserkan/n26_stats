@@ -128,7 +128,7 @@ public class TimeArray {
 			stat = stats.get(i);
 			
 			statWillBeProgressed = stat!=null && stat.calculatedSlotIntheRange(now-EXPIRE_TIME_IN_MILLIS);
-			System.out.println("slot:"+i);
+			
 			if (statWillBeProgressed) {
 				min = Math.min(stat.getMin(), min);
 				max = Math.max(stat.getMax(), max);
