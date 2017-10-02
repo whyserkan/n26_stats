@@ -5,24 +5,24 @@ import org.springframework.stereotype.Service;
 
 import statistic.dto.StatisticsResponseDTO;
 import statistic.dto.TransactionDTO;
-import statistic.model.DataQueue;
+import statistic.model.TimeArray;
 
 
 @Service
 public class TransactionService {
 
-	private DataQueue dataQueue;
+	private TimeArray timeArray;
 
 	@Autowired
-	public TransactionService(DataQueue dataQueue) {
-		this.dataQueue = dataQueue;
+	public TransactionService(TimeArray timeArray) {
+		this.timeArray = timeArray;
 	}
 
 	public boolean push(TransactionDTO transaction) {
-		return dataQueue.add(transaction);
+		return timeArray.add(transaction);
 	}
 
 	public StatisticsResponseDTO getStats() {
-		return dataQueue.getStats();
+		return timeArray.calculate();
 	}
 }

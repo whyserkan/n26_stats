@@ -58,6 +58,7 @@ public class StatisticsResponseDTO {
 		this.min = min;
 		this.count = count;
 	}
-    
+	
+	public StatisticsResponseDTO() {}
     
 }

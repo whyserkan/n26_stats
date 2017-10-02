@@ -1,5 +1,6 @@
 package statistic.dto;
 
+
 public class TransactionDTO {
 	private double amount;
 	private long timestamp;
