@@ -1,6 +1,6 @@
 #### Notes:
 
- * Statistics calculated 10000 milisecond sensivity (this can be improved with using a bigger array, current is fixed 60 elements size)
+ * Statistics calculated with 1 second grouping (this can be improved with using a bigger array, current is fixed 60 elements size)
  * While test script running there are delays to test expired transactions (total about 30 seconds)
 
 ```bash
