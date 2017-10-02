@@ -18,7 +18,7 @@ public class StatOfSecond {
 		this.time = time;
 	}
 	
-	public static StatOfSecond firstStat(TransactionDTO transaction) {
+	public static StatOfSecond byTransaction(TransactionDTO transaction) {
 		StatOfSecond stat = new StatOfSecond(transaction.getTimestamp());
 		stat.setAvg(transaction.getAmount());
 		stat.setSum(transaction.getAmount());
@@ -31,7 +31,7 @@ public class StatOfSecond {
 	public void merge(StatOfSecond otherStat){
 		this.sum += otherStat.getSum();
 		this.cnt += otherStat.getCnt();
-		this.avg = this.sum / this.cnt;
+		this.avg = (double)(this.sum/this.cnt);
 		this.max = Math.max(this.max, otherStat.getMax());
 		this.min = Math.min(this.min, otherStat.getMin());
 	}

@@ -13,6 +13,13 @@ public class TimeArray {
 	
 	private AtomicLong baseTime = new AtomicLong();
 	
+	private enum Result {
+		MERGED,
+		SHIFTED,
+		INSERTED,
+		ERROR
+	};
+	
 	public boolean add(TransactionDTO transaction) {
 		long now = System.currentTimeMillis();
 		
@@ -20,11 +27,17 @@ public class TimeArray {
 			return false;
 		}
 		
-		if (newBaseTimeNeeded(now)) {
+		if(transaction.getAmount()<0){
+			return false;
+		}
+		
+		if (newBaseTimeNeeded(transaction.getTimestamp())) {
 			baseTime.set(now - EXPIRE_TIME_IN_MILLIS);
 		}
 		
-		addNew(transaction);
+		if(addNew(transaction)==Result.ERROR){
+			return false;
+		}
 		
 		return true;
 	}
@@ -33,30 +46,30 @@ public class TimeArray {
 		return now - trTime > EXPIRE_TIME_IN_MILLIS || now < trTime;
 	}
 	
-	private boolean newBaseTimeNeeded(long now) {
-		return baseTime.get() == 0 || baseTime.get() < now - EXPIRE_TIME_IN_MILLIS;
+	private boolean newBaseTimeNeeded(long newTrxTime) {
+		return baseTime.get() == 0 || newTrxTime - baseTime.get() > EXPIRE_TIME_IN_MILLIS;
 	}
 	
-	private synchronized String addNew(TransactionDTO trx) {
-		StatOfSecond newStat = StatOfSecond.firstStat(trx);
+	private synchronized Result addNew(TransactionDTO trx) {
+		StatOfSecond newStat = StatOfSecond.byTransaction(trx);
 		
 		int slotForNewStat = newStat.calculateSlot(baseTime.get());
 		
 		if (mergeNeeded(slotForNewStat)) {
 			stats.get(slotForNewStat).merge(newStat);
-			return "merged";
+			return Result.MERGED;
 		}
 		
 		if (moveNeeded(slotForNewStat)) {
 			moveCollisions(slotForNewStat, newStat);
-			return "shifted";
+			return Result.SHIFTED;
 		}
 		
 		if (okToInsert(slotForNewStat)) {
-			stats.set(slotForNewStat, StatOfSecond.firstStat(trx));
-			return "new inserted";
+			stats.set(slotForNewStat, newStat);
+			return Result.INSERTED;
 		}
-		return "error";
+		return Result.ERROR;
 	}
 	
 	private boolean mergeNeeded(int slotForNewStat) {
@@ -65,10 +78,12 @@ public class TimeArray {
 	
 	private boolean moveNeeded(int slot) {
 		boolean moveNeeded = false;
+		
 		if (stats.get(slot)!=null) {
 			int newSlot = stats.get(slot).calculateSlot(baseTime.get());
 			moveNeeded = newSlot!=slot && newSlot >= 0; 
 		}
+		
 		return moveNeeded;
 	}
 	
@@ -82,10 +97,13 @@ public class TimeArray {
 		if (stat!=null && stat.slotNotChanged(slot, baseTime.get())) {
 			stat.merge(newStat);
 		}else
+			
 		if (stat!=null && stat.calculatedSlotIntheRange(baseTime.get())) {
 			moveCollisions(stat.calculateSlot(baseTime.get()), stat);
 			stats.set(slot, newStat);
-		}else{
+		}
+		
+		else{
 			stats.set(slot, newStat);
 		} 
 	}
@@ -109,14 +127,14 @@ public class TimeArray {
 		for( int i=1; i<60 ; i++ ) { // <--- O(1)
 			stat = stats.get(i);
 			
-			statWillBeProgressed = stat!=null && stat.calculatedSlotIntheRange(now);
-			
+			statWillBeProgressed = stat!=null && stat.calculatedSlotIntheRange(now-EXPIRE_TIME_IN_MILLIS);
+			System.out.println("slot:"+i);
 			if (statWillBeProgressed) {
 				min = Math.min(stat.getMin(), min);
 				max = Math.max(stat.getMax(), max);
 				cnt += stat.getCnt();
 				sum += stat.getSum();
-				avg = sum/cnt;
+				avg = (double)(sum/cnt);
 			}
 		}
 		
