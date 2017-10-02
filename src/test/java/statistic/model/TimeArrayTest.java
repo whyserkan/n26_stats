@@ -30,7 +30,7 @@ public class TimeArrayTest {
 	}
 	
 	@Test
-	public void test_if_one_trx_result_is_correct(){
+	public void test_if_one_trx_result_is_correct() {
 		long now = System.currentTimeMillis();
 		TransactionDTO trx = new TransactionDTO();
 		
@@ -48,7 +48,7 @@ public class TimeArrayTest {
 	}
 	
 	@Test
-	public void test_if_old_time_not_added(){
+	public void test_if_old_time_not_added() {
 		long now = System.currentTimeMillis();
 		TransactionDTO trx = new TransactionDTO();
 		
@@ -62,7 +62,7 @@ public class TimeArrayTest {
 	}
 	
 	@Test
-	public void test_if_returns_false_while_fields_are_empty(){
+	public void test_if_returns_false_while_fields_are_empty() {
 		TransactionDTO trx = new TransactionDTO();
 		assertFalse("Resturn value is wrong while fields are empty",timeArray.add(trx));
 		trx.setAmount(0.1);
@@ -70,7 +70,7 @@ public class TimeArrayTest {
 	}
 	
 	@Test
-	public void test_if_none_trx_result_is_correct(){
+	public void test_if_none_trx_result_is_correct() {
 		StatisticsResponseDTO statsDTO = timeArray.calculate();
 		
 		assertTrue("avg is wrong", statsDTO.getAvg()==0);
@@ -81,7 +81,7 @@ public class TimeArrayTest {
 	}
 	
 	@Test()
-	public void test_if_one_trx_result_is_correct_after_expired(){
+	public void test_if_one_trx_result_is_correct_after_expired() {
 		long time = System.currentTimeMillis()-50000;
 		TransactionDTO trx = new TransactionDTO();
 		
@@ -107,9 +107,8 @@ public class TimeArrayTest {
 	
 	
 	@Test()
-	public void test_if_many_trx_result_is_correct_after_some_expired(){
+	public void test_if_many_trx_result_is_correct_after_some_expired() {
 		long now = System.currentTimeMillis();
-		
 		
 		TransactionDTO trx = new TransactionDTO();
 		trx.setAmount(12);
@@ -150,7 +149,7 @@ public class TimeArrayTest {
 	}
 	
 	@Test()
-	public void test_if_negative_values_not_ok(){
+	public void test_if_negative_values_not_ok() {
 		long now = System.currentTimeMillis();
 		
 		
@@ -170,19 +169,19 @@ public class TimeArrayTest {
 	}
 	
 	@Test()
-	public void test_if_too_may_trx_result_is_correct(){
+	public void test_if_too_may_trx_result_is_correct() {
 		long now = System.currentTimeMillis();
 		
 		class Adder extends Thread{
 			private TransactionDTO trx;
 			private TimeArray timeArray;
 			
-			Adder(TransactionDTO trx, TimeArray timeArray){
+			Adder(TransactionDTO trx, TimeArray timeArray) {
 				this.trx = trx;
 				this.timeArray = timeArray;
 			}
 			@Override
-			public void run(){
+			public void run() {
 				timeArray.add(trx);
 			}
 		}
@@ -192,22 +191,20 @@ public class TimeArrayTest {
 		double expectedMin = 3.4;
 		double expectedMax = 550;
 		long expectedCount = 100000*5;
-		double expectedSum =  (double)((double)(12.1*100000)+ 
-									   (double)(3.4*100000)+
-									   (double)(4.7*100000)+
-									   (double)(10.3*100000)+
-									   (double)(550*100000));
+		double expectedSum =  (double) ( (double)(12.1*100000) + (double)(3.4*100000) + 
+				                         (double)(4.7*100000) + (double)(10.3*100000) + 
+				                         (double)(550*100000) );
 		
 		int time = 1;
 		
-		for(double j : amounts){
+		for(double j : amounts) {
 			
 			TransactionDTO trx1 = new TransactionDTO();
 			trx1.setAmount(j);
 			trx1.setTimestamp(now- 30000 - time*1000);
 			time++;
 
-			for(int i=0;i<100000;i++){
+			for(int i=0;i<100000;i++) {
 				Adder adder = new Adder(trx1,timeArray);
 				adder.run();
 			}
@@ -228,9 +225,7 @@ public class TimeArrayTest {
 		assertEquals("max is wrong",expectedMax ,statsDTO.getMax(),Double.NaN);
 	}	
 	
-	private double round(double d){
+	private double round(double d) {
 		return (double)Math.round(d*1000)/1000;
 	}
-	
-	
 }
