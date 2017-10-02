@@ -1,7 +1,7 @@
 #### Notes:
 
- * Statistics calculated with 1 second grouping (this can be improved with using a bigger array, current is fixed 60 elements size)
- * While test script running there are delays to test expired transactions (total about 30 seconds)
+ * Statistics calculated with grouping the transactions by their seconds (this can be improved with using a bigger array, current is fixed 60 elements size)
+ * While test script running there are delays because of testing expired transactions (total about 30 seconds)
 
 ```bash
 mvn clean package
